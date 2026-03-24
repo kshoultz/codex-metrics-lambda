@@ -6,11 +6,9 @@ Twin project to [claude-metrics-lambda](../claude-metrics-lambda/) — same patt
 
 ## Quick Start
 
-### 1. Clone and install
+### 1. Install
 
 ```bash
-git clone https://github.com/YOUR_USER/codex-metrics-lambda.git
-cd codex-metrics-lambda
 npm install
 ```
 
@@ -97,17 +95,56 @@ Codex CLI usage is detected by filtering completions for known Codex model names
 ## Tests
 
 ```bash
+# TypeScript
 npm test
+
+# Python
+cd python && source .venv/bin/activate && python -m pytest -v
 ```
 
 ## Project Structure
 
+This project includes two functionally identical Lambda implementations — TypeScript and Python — that produce the same JSON output.
+
 ```
-src/
+src/                          # TypeScript Lambda
 ├── index.ts              # Lambda handler
 ├── openai-admin.ts       # Typed Admin API client (native fetch, zero deps)
 ├── aggregator.ts         # Data shaping + math (token sums, cost projection, burn rate)
 └── types.ts              # All TypeScript interfaces + Codex model detection
+
+python/                       # Python Lambda
+├── src/
+│   ├── handler.py        # Lambda handler
+│   ├── openai_admin.py   # Admin API client (urllib.request, zero deps)
+│   ├── aggregator.py     # Data shaping + math
+│   └── types.py          # TypedDict definitions + Codex model detection
+├── tests/
+│   └── test_aggregator.py
+├── scripts/
+│   ├── invoke_local.py
+│   └── deploy-local.sh
+├── Dockerfile
+└── pyproject.toml
+```
+
+### Python Quick Start
+
+```bash
+cd python
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+python -m pytest -v
+python scripts/invoke_local.py
+```
+
+### Python LocalStack Deploy
+
+```bash
+docker compose up -d
+./python/scripts/deploy-local.sh
+awslocal lambda invoke --function-name codex-metrics-python --region us-east-1 /dev/stdout
 ```
 
 ## License

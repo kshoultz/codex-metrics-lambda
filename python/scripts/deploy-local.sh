@@ -1,33 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Deploy the Codex Metrics Lambda to LocalStack.
+# Deploy the Codex Metrics Lambda (Python) to LocalStack.
 #
 # Prerequisites:
 #   1. docker compose up -d
 #   2. Copy .env.example to .env and set OPENAI_ADMIN_API_KEY
 #
 # Usage:
-#   ./scripts/deploy-local.sh
+#   ./python/scripts/deploy-local.sh
 
-FUNCTION_NAME="codex-metrics"
+FUNCTION_NAME="codex-metrics-python"
 REGION="us-east-1"
 
-echo "==> Building Lambda bundle..."
-npx esbuild src/index.ts \
-  --bundle \
-  --platform=node \
-  --target=node18 \
-  --outfile=dist/index.mjs \
-  --format=esm \
-  --banner:js="import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "==> Packaging..."
+echo "==> Packaging Python Lambda..."
+cd "$PROJECT_DIR"
+rm -rf dist
+mkdir -p dist
+
+# Copy source into dist for zipping
+cp -r src dist/
 cd dist
-zip -q function.zip index.mjs
-cd ..
+zip -qr function.zip src/
+cd "$PROJECT_DIR"
 
-# Load .env file for the API key
+# Load .env file for the API key (check both python/ and root)
+if [ -f ../.env ]; then
+  # shellcheck disable=SC1091
+  source ../.env
+fi
 if [ -f .env ]; then
   # shellcheck disable=SC1091
   source .env
@@ -47,6 +51,7 @@ if [ -n "${CODEX_CLI_TOKEN_LIMIT:-}" ]; then
 fi
 ENV_VARS="${ENV_VARS}}}"
 
+# Check if function exists
 if awslocal lambda get-function --function-name "$FUNCTION_NAME" --region "$REGION" &>/dev/null; then
   echo "==> Updating existing function..."
   awslocal lambda update-function-code \
@@ -70,8 +75,8 @@ else
 
   awslocal lambda create-function \
     --function-name "$FUNCTION_NAME" \
-    --runtime nodejs18.x \
-    --handler index.handler \
+    --runtime python3.11 \
+    --handler src.handler.handler \
     --zip-file fileb://dist/function.zip \
     --role arn:aws:iam::000000000000:role/lambda-role \
     --timeout 30 \
@@ -85,3 +90,4 @@ echo ""
 echo "==> Deployed! Invoke with:"
 echo ""
 echo "  awslocal lambda invoke --function-name $FUNCTION_NAME --region $REGION /dev/stdout"
+echo ""
