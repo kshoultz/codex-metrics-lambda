@@ -6,42 +6,22 @@ Twin project to [claude-metrics-lambda](../claude-metrics-lambda/) — same patt
 
 Available in **TypeScript** and **Python** — both produce identical JSON output.
 
-## Prerequisites
+## Quick Start
 
-- [Node.js](https://nodejs.org/) >= 18 (for TypeScript Lambda)
-- [Python](https://www.python.org/) >= 3.11 (for Python Lambda)
-- [Docker](https://www.docker.com/)
-- [AWS CLI](https://aws.amazon.com/cli/)
-
-## Quick Start (TypeScript)
+Only Docker required. No local Node.js, Python, or AWS CLI needed.
 
 ```bash
-npm install
-cp .env.example .env
-# Edit .env and set OPENAI_ADMIN_API_KEY
-# Get one from: https://platform.openai.com/settings/organization/admin-keys
-
-docker compose up -d
-npm run deploy:local
-aws --endpoint-url http://localhost:4566 lambda invoke --function-name codex-metrics --region us-east-1 /dev/stdout
+cp .env.example .env          # add your OPENAI_ADMIN_API_KEY
+docker compose up              # deploys and invokes both lambdas
 ```
 
-Or run directly without Docker: `npm run invoke`
+Get an Admin API key from: https://platform.openai.com/settings/organization/admin-keys
 
-## Quick Start (Python)
+## Run Tests
 
 ```bash
-cd python
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-
-# From project root
-docker compose up -d
-./python/scripts/deploy-local.sh
-aws --endpoint-url http://localhost:4566 lambda invoke --function-name codex-metrics-python --region us-east-1 /dev/stdout
+docker compose --profile test up test-ts test-python
 ```
-
-Or run directly without Docker: `python scripts/invoke_local.py`
 
 ## What You Get
 
@@ -88,38 +68,46 @@ Codex CLI usage is detected by filtering completions for known Codex model names
 | `OPENAI_API_TOKEN_LIMIT` | No | `50000000` | Token limit for capacity calculations |
 | `CODEX_CLI_TOKEN_LIMIT` | No | `50000000` | Codex CLI token limit |
 
-## Tests
-
-```bash
-# TypeScript
-npm test
-
-# Python
-cd python && source .venv/bin/activate && python -m pytest -v
-```
-
 ## Project Structure
+
+Two functionally identical Lambda implementations that produce the same JSON output.
 
 ```
 src/                          # TypeScript Lambda
-├── index.ts              # Lambda handler
-├── openai-admin.ts       # Admin API client (native fetch, zero deps)
-├── aggregator.ts         # Data shaping + math
-└── types.ts              # All TypeScript interfaces + Codex model detection
+├── index.ts
+├── openai-admin.ts
+├── aggregator.ts
+└── types.ts
 
-python/                       # Python Lambda
-├── src/
-│   ├── handler.py        # Lambda handler
-│   ├── openai_admin.py   # Admin API client (urllib.request, zero deps)
-│   ├── aggregator.py     # Data shaping + math
-│   └── types.py          # TypedDict definitions + Codex model detection
-├── tests/
-│   └── test_aggregator.py
-├── scripts/
-│   ├── invoke_local.py
-│   └── deploy-local.sh
-├── Dockerfile
-└── pyproject.toml
+python/src/                   # Python Lambda
+├── handler.py
+├── openai_admin.py
+├── aggregator.py
+└── types.py
+```
+
+## Alternative: Run Without Docker
+
+Requires Node.js >= 18, Python >= 3.11, and AWS CLI on your host.
+
+```bash
+# TypeScript — run directly
+npm install
+npm run invoke
+
+# TypeScript — deploy to LocalStack
+npm run deploy:local
+
+# Python — run directly
+cd python && python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]" && python scripts/invoke_local.py
+
+# Python — deploy to LocalStack
+./python/scripts/deploy-local.sh
+
+# Unit tests
+npm test
+cd python && source .venv/bin/activate && python -m pytest -v
 ```
 
 ## License
