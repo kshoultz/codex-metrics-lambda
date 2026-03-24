@@ -121,6 +121,16 @@ npm test
 cd python && source .venv/bin/activate && python -m pytest -v
 ```
 
+## Why This Lambda?
+
+The OpenAI Admin API spreads account metrics across multiple endpoints — completions usage, costs, per-user breakdowns, projects, members, and API keys. Getting a complete picture requires orchestrating 7+ API calls, filtering Codex CLI usage from general completions by model name, and doing the math (burn rates, projections, exhaustion dates).
+
+This Lambda does all of that in a single invocation and returns one shaped JSON response. Deploy it on a schedule (CloudWatch Events, cron) and pipe the output to a dashboard, Slack alert, or monitoring system.
+
+## Why This Repository?
+
+This is a reference implementation for consuming the OpenAI Admin API. It's designed to be cloned, modified, and deployed — not installed as a package. Two implementations (TypeScript and Python) are provided so you can pick whichever fits your stack, or use both as a Rosetta Stone for porting the logic elsewhere.
+
 ## License
 
 MIT
