@@ -17,6 +17,17 @@ docker compose up              # deploys and invokes both lambdas
 
 Get an Admin API key from: https://platform.openai.com/settings/organization/admin-keys
 
+## Dashboard
+
+View your metrics in a formatted terminal display — no Docker or Lambda needed. Calls the OpenAI API directly from Node.js.
+
+```bash
+npm install                    # first time only
+npm run dashboard
+```
+
+Requires Node.js >= 18 and `OPENAI_ADMIN_API_KEY` in your `.env`.
+
 ## Run Tests
 
 ```bash
