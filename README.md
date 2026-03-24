@@ -1,5 +1,7 @@
 # codex-metrics-lambda
 
+> **TL;DR:** One Lambda call → your complete OpenAI account metrics (tokens, spend, projections, Codex CLI per-user breakdown) as a single JSON response. [Why?](#why-this-lambda)
+
 Lambda that fetches your OpenAI account metrics via the Admin API and returns a single shaped response: token capacity, cost tracking, usage breakdown, Codex CLI per-user stats, and account info.
 
 Twin project to [claude-metrics-lambda](../claude-metrics-lambda/) — same pattern, different provider.
